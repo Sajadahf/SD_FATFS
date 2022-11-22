@@ -1,4 +1,4 @@
-sd_fatfs\user_diskio.o: ../FATFS/Target/user_diskio.c
+sd_fatfs\user_diskio.o: ..\FATFS\Target\user_diskio.c
 sd_fatfs\user_diskio.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 sd_fatfs\user_diskio.o: ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h
 sd_fatfs\user_diskio.o: ../Middlewares/Third_Party/FatFs/src/diskio.h
@@ -35,3 +35,6 @@ sd_fatfs\user_diskio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_spi.h
 sd_fatfs\user_diskio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim.h
 sd_fatfs\user_diskio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_tim_ex.h
 sd_fatfs\user_diskio.o: ../Drivers/STM32F1xx_HAL_Driver/Inc/stm32f1xx_hal_uart.h
+sd_fatfs\user_diskio.o: ../Core/Inc/sd.h
+sd_fatfs\user_diskio.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h
+sd_fatfs\user_diskio.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h

@@ -36,6 +36,7 @@ sd_fatfs\main.o: ../FATFS/Target/ffconf.h
 sd_fatfs\main.o: ../Middlewares/Third_Party/FatFs/src/ff_gen_drv.h
 sd_fatfs\main.o: ../Middlewares/Third_Party/FatFs/src/diskio.h
 sd_fatfs\main.o: ../FATFS/Target/user_diskio.h
+sd_fatfs\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdio.h
 sd_fatfs\main.o: ../Core/Inc/sd.h
 sd_fatfs\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\string.h
 sd_fatfs\main.o: C:\Keil_v5\ARM\ARMCC\Bin\..\include\stdlib.h

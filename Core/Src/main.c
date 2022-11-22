@@ -19,7 +19,7 @@
 /* Includes ------------------------------------------------------------------*/
 #include "main.h"
 #include "fatfs.h"
-
+#include "stdio.h"
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 #include "sd.h"
@@ -40,16 +40,25 @@
 /* USER CODE END PM */
 
 /* Private variables ---------------------------------------------------------*/
+SPI_HandleTypeDef hspi1;
+
 SPI_HandleTypeDef hspi2;
 
 TIM_HandleTypeDef htim2;
 
 UART_HandleTypeDef huart1;
 
-volatile uint16_t Timer1=0;
-
 /* USER CODE BEGIN PV */
-
+volatile uint16_t Timer1=0;
+uint8_t sect[512];
+//char buffer1[512] ="Selection ... The... . Of course, you can do this with the help of breakpoints, but there are certain rumors that it¡¯s better not to slow down the work with the map, because the initialization expires very quickly and you need to redo it, although I also worked in debugging and these rumors were not confirmed. However, it is still a terminal program."; //§¢§å§æ§Ö§â §Õ§Ñ§ß§ß§í§ç §Õ§Ý§ñ §Ù§Ñ§á§Ú§ã§Ú/§é§ä§Ö§ß§Ú§ñ
+extern char str1[60];
+uint32_t byteswritten,bytesread;
+uint8_t result;
+extern char USERPath[4]; /* logical drive path */
+FATFS SDFatFs;
+FATFS *fs;
+FIL MyFile;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
@@ -58,13 +67,44 @@ static void MX_GPIO_Init(void);
 static void MX_SPI2_Init(void);
 static void MX_TIM2_Init(void);
 static void MX_USART1_UART_Init(void);
+static void MX_SPI1_Init(void);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
 
 /* Private user code ---------------------------------------------------------*/
 /* USER CODE BEGIN 0 */
-
+FRESULT ReadLongFile(void)
+{
+  uint16_t i=0, i1=0;
+  uint32_t ind=0;
+  uint32_t f_size = MyFile.fsize;
+  sprintf(str1,"fsize: %lu\r\n",(unsigned long)f_size);
+  HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+  ind=0;
+  do
+  {
+    if(f_size<512)
+    {
+      i1=f_size;
+    }
+    else
+    {
+      i1=512;
+    }
+    f_size-=i1;
+    f_lseek(&MyFile,ind);
+    f_read(&MyFile,sect,i1,(UINT *)&bytesread);
+    for(i=0;i<bytesread;i++)
+    {
+      HAL_UART_Transmit(&huart1,sect+i,1,0x1000);
+    }
+    ind+=i1;
+  }
+  while(f_size>0);
+  HAL_UART_Transmit(&huart1,(uint8_t*)"\r\n",2,0x1000);
+  return FR_OK;
+}
 /* USER CODE END 0 */
 
 /**
@@ -74,7 +114,9 @@ static void MX_USART1_UART_Init(void);
 int main(void)
 {
   /* USER CODE BEGIN 1 */
-
+	//uint16_t i;
+	FRESULT res; //§â§Ö§Ù§å§Ý§î§ä§Ñ§ä §Ó§í§á§à§Ý§ß§Ö§ß§Ú§ñ
+	uint8_t wtext[]="Hello from STM32!!!";
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -99,11 +141,56 @@ int main(void)
   MX_TIM2_Init();
   MX_USART1_UART_Init();
   MX_FATFS_Init();
+  MX_SPI1_Init();
   /* USER CODE BEGIN 2 */
 	HAL_TIM_Base_Start_IT(&htim2);
-	SD_PowerOn();
-	sd_ini();
-  /* USER CODE END 2 */
+	//SD_PowerOn();
+	//sd_ini();
+	//SD_Write_Block((uint8_t*)buffer1,0x0400); //§©§Ñ§á§Ú§ê§Ö§Þ §Ò§Ý§à§Ü §Ó §Ò§å§æ§Ö§â
+  //SD_Read_Block(sect,0x0400); //§³§é§Ú§ä§Ñ§Ö§Þ §Ò§Ý§à§Ü §Ú§Ù §Ò§å§æ§Ö§â§Ñ
+	//for(i=0;i<512;i++) HAL_UART_Transmit(&huart1,sect+i,1,0x1000);
+	//HAL_UART_Transmit(&huart1,(uint8_t*)"\r\n",2,0x1000);
+	disk_initialize(SDFatFs.drv);
+	//read
+	if(f_mount(&SDFatFs,(TCHAR const*)USERPath,0)!=FR_OK)
+	{
+		Error_Handler();
+	}
+	else
+	{
+		if(f_open(&MyFile,"123.txt",FA_READ)!=FR_OK)
+		{
+			Error_Handler();
+		}
+		else
+		{
+			ReadLongFile();
+			f_close(&MyFile);
+		}
+	}
+	//write
+	if(f_mount(&SDFatFs,(TCHAR const*)USERPath,0)!=FR_OK)
+	{
+		Error_Handler();
+	}
+	else
+
+	{
+		if(f_open(&MyFile,"mywrite.txt",FA_CREATE_ALWAYS|FA_WRITE)!=FR_OK)
+		{
+			Error_Handler();
+		}
+		else
+		{
+			res=f_write(&MyFile,wtext,sizeof(wtext),(void*)&byteswritten);
+			if((byteswritten==0)||(res!=FR_OK))
+			{
+				Error_Handler();
+			}
+			f_close(&MyFile);
+		}
+	}
+	/* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
@@ -153,6 +240,44 @@ void SystemClock_Config(void)
   {
     Error_Handler();
   }
+}
+
+/**
+  * @brief SPI1 Initialization Function
+  * @param None
+  * @retval None
+  */
+static void MX_SPI1_Init(void)
+{
+
+  /* USER CODE BEGIN SPI1_Init 0 */
+
+  /* USER CODE END SPI1_Init 0 */
+
+  /* USER CODE BEGIN SPI1_Init 1 */
+
+  /* USER CODE END SPI1_Init 1 */
+  /* SPI1 parameter configuration*/
+  hspi1.Instance = SPI1;
+  hspi1.Init.Mode = SPI_MODE_MASTER;
+  hspi1.Init.Direction = SPI_DIRECTION_2LINES;
+  hspi1.Init.DataSize = SPI_DATASIZE_8BIT;
+  hspi1.Init.CLKPolarity = SPI_POLARITY_LOW;
+  hspi1.Init.CLKPhase = SPI_PHASE_1EDGE;
+  hspi1.Init.NSS = SPI_NSS_SOFT;
+  hspi1.Init.BaudRatePrescaler = SPI_BAUDRATEPRESCALER_4;
+  hspi1.Init.FirstBit = SPI_FIRSTBIT_MSB;
+  hspi1.Init.TIMode = SPI_TIMODE_DISABLE;
+  hspi1.Init.CRCCalculation = SPI_CRCCALCULATION_DISABLE;
+  hspi1.Init.CRCPolynomial = 10;
+  if (HAL_SPI_Init(&hspi1) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN SPI1_Init 2 */
+
+  /* USER CODE END SPI1_Init 2 */
+
 }
 
 /**
@@ -289,7 +414,10 @@ static void MX_GPIO_Init(void)
   HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET);
 
   /*Configure GPIO pin Output Level */
-  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_3, GPIO_PIN_RESET);
+  HAL_GPIO_WritePin(GPIOA, GPIO_PIN_4, GPIO_PIN_RESET);
+
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOB, GPIO_PIN_12, GPIO_PIN_RESET);
 
   /*Configure GPIO pin : PC0 */
   GPIO_InitStruct.Pin = GPIO_PIN_0;
@@ -298,12 +426,29 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
 
-  /*Configure GPIO pin : PA3 */
-  GPIO_InitStruct.Pin = GPIO_PIN_3;
+  /*Configure GPIO pin : PA2 */
+  GPIO_InitStruct.Pin = GPIO_PIN_2;
+  GPIO_InitStruct.Mode = GPIO_MODE_IT_RISING_FALLING;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PA4 */
+  GPIO_InitStruct.Pin = GPIO_PIN_4;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
   HAL_GPIO_Init(GPIOA, &GPIO_InitStruct);
+
+  /*Configure GPIO pin : PB12 */
+  GPIO_InitStruct.Pin = GPIO_PIN_12;
+  GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
+  GPIO_InitStruct.Pull = GPIO_NOPULL;
+  GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_MEDIUM;
+  HAL_GPIO_Init(GPIOB, &GPIO_InitStruct);
+
+  /* EXTI interrupt init*/
+  HAL_NVIC_SetPriority(EXTI2_IRQn, 0, 0);
+  HAL_NVIC_EnableIRQ(EXTI2_IRQn);
 
 }
 

@@ -1,10 +1,10 @@
 --cpu Cortex-M3
 "sd_fatfs\startup_stm32f103xe.o"
+"sd_fatfs\sd.o"
 "sd_fatfs\main.o"
 "sd_fatfs\stm32f1xx_it.o"
 "sd_fatfs\stm32f1xx_hal_msp.o"
-"sd_fatfs\sd.o"
-"sd_fatfs\user_diskio.o"
+"sd_fatfs\user_diskio_1.o"
 "sd_fatfs\fatfs.o"
 "sd_fatfs\stm32f1xx_hal_gpio_ex.o"
 "sd_fatfs\stm32f1xx_hal.o"

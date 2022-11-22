@@ -6,12 +6,12 @@
 #include <stdlib.h>
 #include <stdint.h>
 //--------------------------------------------------
-#define CS_SD_GPIO_PORT GPIOA
-#define CS_SD_PIN GPIO_PIN_3
+#define CS_SD_GPIO_PORT GPIOB
+#define CS_SD_PIN GPIO_PIN_12
 #define SS_SD_SELECT() HAL_GPIO_WritePin(CS_SD_GPIO_PORT, CS_SD_PIN, GPIO_PIN_RESET)
 #define SS_SD_DESELECT() HAL_GPIO_WritePin(CS_SD_GPIO_PORT, CS_SD_PIN, GPIO_PIN_SET)
-#define LD_ON HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET); //RED
-#define LD_OFF HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0	, GPIO_PIN_SET); //RED
+#define LD_ON HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0, GPIO_PIN_RESET); 
+#define LD_OFF HAL_GPIO_WritePin(GPIOC, GPIO_PIN_0	, GPIO_PIN_SET); 
 //--------------------------------------------------
 /* Card type flags (CardType) */
 #define CT_MMC 0x01 /* MMC ver 3 */
@@ -21,11 +21,14 @@
 #define CT_BLOCK 0x08 /* Block addressing */
 //--------------------------------------------------
 typedef struct sd_info {
-  volatile uint8_t type;//§ä§Ú§á §Ü§Ñ§â§ä§í
+  volatile uint8_t type;
 } sd_info_ptr;
 //--------------------------------------------------
 void SD_PowerOn(void);
 uint8_t sd_ini(void);
-void SPI_Release(void);		
+void SPI_Release(void);	
+uint8_t SD_Write_Block (uint8_t *buff, uint32_t lba);
+uint8_t SD_Read_Block (uint8_t *buff, uint32_t lba);
+uint8_t SPI_wait_ready(void);
 //--------------------------------------------------
 #endif /* SD_H_ */
