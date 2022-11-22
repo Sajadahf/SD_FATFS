@@ -117,6 +117,10 @@ int main(void)
 	//uint16_t i;
 	FRESULT res; //§â§Ö§Ù§å§Ý§î§ä§Ñ§ä §Ó§í§á§à§Ý§ß§Ö§ß§Ú§ñ
 	uint8_t wtext[]="Hello from STM32!!!";
+	FILINFO fileInfo;
+	char *fn;
+	DIR dir;
+	DWORD fre_clust, fre_sect, tot_sect;
   /* USER CODE END 1 */
 
   /* MCU Configuration--------------------------------------------------------*/
@@ -152,6 +156,7 @@ int main(void)
 	//HAL_UART_Transmit(&huart1,(uint8_t*)"\r\n",2,0x1000);
 	disk_initialize(SDFatFs.drv);
 	//read
+	/*
 	if(f_mount(&SDFatFs,(TCHAR const*)USERPath,0)!=FR_OK)
 	{
 		Error_Handler();
@@ -168,6 +173,8 @@ int main(void)
 			f_close(&MyFile);
 		}
 	}
+	*/
+	/*
 	//write
 	if(f_mount(&SDFatFs,(TCHAR const*)USERPath,0)!=FR_OK)
 	{
@@ -176,7 +183,7 @@ int main(void)
 	else
 
 	{
-		if(f_open(&MyFile,"mywrite.txt",FA_CREATE_ALWAYS|FA_WRITE)!=FR_OK)
+		if(f_open(&MyFile,"mywrite1.txt",FA_CREATE_ALWAYS|FA_WRITE)!=FR_OK)
 		{
 			Error_Handler();
 		}
@@ -190,6 +197,55 @@ int main(void)
 			f_close(&MyFile);
 		}
 	}
+	*/
+	// read dir
+	if(f_mount(&SDFatFs,(TCHAR const*)USERPath,0)!=FR_OK)
+	{
+		Error_Handler();
+	}
+	else
+	{
+		fileInfo.lfname = (char*)sect;
+		fileInfo.lfsize = sizeof(sect);
+		result = f_opendir(&dir, "/");
+		if (result == FR_OK)
+		{
+			while(1)
+			{
+				result = f_readdir(&dir, &fileInfo);
+				if (result==FR_OK && fileInfo.fname[0])
+				{
+					fn = fileInfo.lfname;
+					if(strlen(fn)) HAL_UART_Transmit(&huart1,(uint8_t*)fn,strlen(fn),0x1000);
+					else HAL_UART_Transmit(&huart1,(uint8_t*)fileInfo.fname,strlen((char*)fileInfo.fname),0x1000);
+					if(fileInfo.fattrib&AM_DIR)
+					{
+						HAL_UART_Transmit(&huart1,(uint8_t*)" [DIR]",7,0x1000);
+					}
+				}
+				else break;
+				HAL_UART_Transmit(&huart1,(uint8_t*)"\r\n",2,0x1000);
+			}
+			f_getfree("/", &fre_clust, &fs);
+			sprintf(str1,"fre_clust: %lu\r\n",fre_clust);
+			HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+			sprintf(str1,"n_fatent: %lu\r\n",fs->n_fatent);
+			HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+			sprintf(str1,"fs_csize: %d\r\n",fs->csize);
+			HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+			tot_sect = (fs->n_fatent - 2) * fs->csize;
+			sprintf(str1,"tot_sect: %lu\r\n",tot_sect);
+			HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+			fre_sect = fre_clust * fs->csize;
+			sprintf(str1,"fre_sect: %lu\r\n",fre_sect);
+			HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+			sprintf(str1, "%lu KB total drive space.\r\n%lu KB available.\r\n",
+			fre_sect/2, tot_sect/2);
+			HAL_UART_Transmit(&huart1,(uint8_t*)str1,strlen(str1),0x1000);
+			f_closedir(&dir);
+		}
+	}
+	FATFS_UnLinkDriver(USERPath);
 	/* USER CODE END 2 */
 
   /* Infinite loop */
